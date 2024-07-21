@@ -5,6 +5,7 @@ import LoadingPage from "./LoadingPage.js"
 import Actions from './Actions.js'
 
 const row = (bill) => {
+  console.log('Row Data:', bill.date);
   return (`
     <tr>
       <td>${bill.type}</td>
@@ -20,11 +21,17 @@ const row = (bill) => {
   }
 
 const rows = (data) => {
-  return (data && data.length) ? data.map(bill => row(bill)).join("") : ""
+  if (!data || !data.length) return "";
+  //////////////////////////////le changement 
+  // Convert date strings to Date objects and sort the bills by date (ascending)
+  const sortedData = data.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  return sortedData.map(bill => row(bill)).join("");
+ // return (data && data.length) ? data.map(bill => row(bill)).join("") : ""
 }
 
 export default ({ data: bills, loading, error }) => {
-  
+  console.log('Bills Data:', bills);
   const modal = () => (`
     <div class="modal fade" id="modaleFile" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
