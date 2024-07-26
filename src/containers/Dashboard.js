@@ -157,35 +157,47 @@ export default class {
   }
 
   handleShowTickets(e, bills, index) {
+    // Initialisation de l'objet this.counters si ce n'est pas déjà fait
     if (!this.counters) {
-      this.counters = {
-          pending: {},
-          accepted: {},
-          refused: {}
-      };
+        this.counters = {
+            pending: {},
+            accepted: {},
+            refused: {}
+        };
     }
 
-    if (this.counter === undefined || this.index !== index) {
-        this.counter = 0;
-        this.index = index;
+    // Initialisation de this.indexCounters pour gérer les compteurs par index
+    if (!this.indexCounters) {
+        this.indexCounters = {};
     }
 
-    if (this.counter % 2 === 0) {
-        $(`#arrow-icon${this.index}`).css({ transform: 'rotate(0deg)' });
-        $(`#status-bills-container${this.index}`).html(cards(filteredBills(bills, getStatus(this.index))));
+    // Initialisation du compteur pour l'index donné s'il n'existe pas
+    if (this.indexCounters[index] === undefined) {
+        this.indexCounters[index] = 0;
+    }
+
+    // Ouverture ou fermeture de la liste des factures en fonction du compteur pour cet index
+    if (this.indexCounters[index] % 2 === 0) {
+        $(`#arrow-icon${index}`).css({ transform: 'rotate(0deg)' });
+        $(`#status-bills-container${index}`)
+            .html(cards(filteredBills(bills, getStatus(index))));
     } else {
-        $(`#arrow-icon${this.index}`).css({ transform: 'rotate(90deg)' });
-        $(`#status-bills-container${this.index}`).html("");
+        $(`#arrow-icon${index}`).css({ transform: 'rotate(90deg)' });
+        $(`#status-bills-container${index}`).html("");
     }
 
+    // Ajout des gestionnaires de clic pour chaque facture
     bills.forEach(bill => {
         $(`#open-bill${bill.id}`).off('click').on('click', (e) => {
-            this.handleEditTicket(e, bill, bills, getStatus(this.index));
+            this.handleEditTicket(e, bill, bills, getStatus(index));
         });
     });
 
+    // Incrémentation du compteur pour cet index
+    this.indexCounters[index]++;
+
     return bills;
-  }
+}
 
   getBillsAllUsers = () => {
     if (this.store) {
