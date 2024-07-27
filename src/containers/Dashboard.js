@@ -1,3 +1,4 @@
+
 import { formatDate } from '../app/format.js'
 import DashboardFormUI from '../views/DashboardFormUI.js'
 import BigBilledIcon from '../assets/svg/big_billed.js'
@@ -84,58 +85,32 @@ export default class {
     $('#modaleFileAdmin1').find(".modal-body").html(`<div style='text-align: center;'><img width=${imgWidth} src=${billUrl} alt="Bill"/></div>`)
     if (typeof $('#modaleFileAdmin1').modal === 'function') $('#modaleFileAdmin1').modal('show')
   }
-  handleEditTicket(e, bill, bills, status) {
-    console.log(status)
-    if (!this.counters) {
-      this.counters = {
-          pending: {},
-          accepted: {},
-          refused: {}
-      };
-    }
-    // Vérifiez et initialisez this.id et this.status si nécessaire
-    if (!this.id) {
-      this.id = bill.id;
-    }
-    if (!this.status) {
-        this.status = status;
-    }
 
-    if (this.counters[status][bill.id] === undefined) {
-        this.counters[status][bill.id] = 0;
-    }
-
-    if (this.id !== bill.id || this.status !== status) {
-        this.counters[this.status][this.id] = 0; // Réinitialisation du compteur pour le statut précédent
-        this.id = bill.id;
-        this.status = status;
-    }
-
-    console.log(`Status: ${status}, Counter: ${this.counters[status][bill.id]}`);
-
-    if (this.counters[status][bill.id] % 2 === 0) {
-        bills.forEach(b => {
-            $(`#open-bill${b.id}`).css({ background: '#0D5AE5' });
-        });
-        $(`#open-bill${bill.id}`).css({ background: '#2A2B35' });
-        $('.dashboard-right-container div').html(DashboardFormUI(bill));
-        $('.vertical-navbar').css({ height: '150vh' });
+  handleEditTicket(e, bill, bills) {
+    if (this.counter === undefined || this.id !== bill.id) this.counter = 0
+    if (this.id === undefined || this.id !== bill.id) this.id = bill.id
+    if (this.counter % 2 === 0) {
+      bills.forEach(b => {
+        $(`#open-bill${b.id}`).css({ background: '#0D5AE5' })
+      })
+      $(`#open-bill${bill.id}`).css({ background: '#2A2B35' })
+      $('.dashboard-right-container div').html(DashboardFormUI(bill))
+      $('.vertical-navbar').css({ height: '150vh' })
+      this.counter ++
     } else {
-        $(`#open-bill${bill.id}`).css({ background: '#0D5AE5' });
-        $('.dashboard-right-container div').html(`
-            <div id="big-billed-icon" data-testid="big-billed-icon"> ${BigBilledIcon} </div>
-        `);
-        $('.vertical-navbar').css({ height: '120vh' });
+      $(`#open-bill${bill.id}`).css({ background: '#0D5AE5' })
+
+      $('.dashboard-right-container div').html(`
+        <div id="big-billed-icon" data-testid="big-billed-icon"> ${BigBilledIcon} </div>
+      `)
+      $('.vertical-navbar').css({ height: '120vh' })
+      this.counter ++
     }
-
-    this.counters[status][bill.id]++;
-
-    $('#icon-eye-d').off('click').on('click', this.handleClickIconEye);
-    $('#btn-accept-bill').off('click').on('click', (e) => this.handleAcceptSubmit(e, bill));
-    $('#btn-refuse-bill').off('click').on('click', (e) => this.handleRefuseSubmit(e, bill));
-      
+    $('#icon-eye-d').click(this.handleClickIconEye)
+    $('#btn-accept-bill').click((e) => this.handleAcceptSubmit(e, bill))
+    $('#btn-refuse-bill').click((e) => this.handleRefuseSubmit(e, bill))
   }
-  
+
   handleAcceptSubmit = (e, bill) => {
     const newBill = {
       ...bill,
@@ -157,47 +132,33 @@ export default class {
   }
 
   handleShowTickets(e, bills, index) {
-    // Initialisation de l'objet this.counters si ce n'est pas déjà fait
-    if (!this.counters) {
-        this.counters = {
-            pending: {},
-            accepted: {},
-            refused: {}
-        };
-    }
-
-    // Initialisation de this.indexCounters pour gérer les compteurs par index
     if (!this.indexCounters) {
-        this.indexCounters = {};
+      this.indexCounters = {};
     }
-
-    // Initialisation du compteur pour l'index donné s'il n'existe pas
     if (this.indexCounters[index] === undefined) {
-        this.indexCounters[index] = 0;
+      this.indexCounters[index] = 0;
     }
-
-    // Ouverture ou fermeture de la liste des factures en fonction du compteur pour cet index
     if (this.indexCounters[index] % 2 === 0) {
-        $(`#arrow-icon${index}`).css({ transform: 'rotate(0deg)' });
-        $(`#status-bills-container${index}`)
-            .html(cards(filteredBills(bills, getStatus(index))));
+      $(`#arrow-icon${this.index}`).css({ transform: 'rotate(0deg)'})
+      $(`#status-bills-container${index}`)
+        .html(cards(filteredBills(bills, getStatus(index))))
+      
     } else {
-        $(`#arrow-icon${index}`).css({ transform: 'rotate(90deg)' });
-        $(`#status-bills-container${index}`).html("");
+      $(`#arrow-icon${index}`).css({ transform: 'rotate(90deg)'})
+      $(`#status-bills-container${index}`)
+        .html("")
+      
     }
 
-    // Ajout des gestionnaires de clic pour chaque facture
     bills.forEach(bill => {
-        $(`#open-bill${bill.id}`).off('click').on('click', (e) => {
-            this.handleEditTicket(e, bill, bills, getStatus(index));
-        });
-    });
-
-    // Incrémentation du compteur pour cet index
+      if(getStatus(index) === bill.status){
+        $(`#open-bill${bill.id}`).click((e) => this.handleEditTicket(e, bill, bills))
+      }
+    })
     this.indexCounters[index]++;
+    return bills
 
-    return bills;
-}
+  }
 
   getBillsAllUsers = () => {
     if (this.store) {
